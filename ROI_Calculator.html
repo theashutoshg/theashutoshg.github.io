@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Cost Optimization ROI Calculator - Ashutosh Gupta</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); min-height: 100vh; padding: 40px 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .roi-card { background: white; border-radius: 20px; box-shadow: 0 25px 80px rgba(0,0,0,0.3); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white; padding: 60px 40px; text-align: center; }
+        .header h1 { font-size: 2.5rem; font-weight: 800; margin-bottom: 15px; }
+        .header .subtitle { font-size: 1.2rem; color: #c4b5fd; margin-bottom: 20px; }
+        .content { padding: 50px 40px; }
+        .section { margin-bottom: 50px; }
+        .section-title { font-size: 1.6rem; font-weight: 700; color: #7c3aed; margin-bottom: 25px; padding-bottom: 12px; border-bottom: 4px solid #7c3aed; display: inline-block; }
+        
+        /* Bar Chart */
+        .bar-chart { display: flex; align-items: flex-end; justify-content: space-around; height: 300px; background: #f5f3ff; padding: 30px; border-radius: 15px; margin-top: 25px; }
+        .bar-group { display: flex; flex-direction: column; align-items: center; }
+        .bar { width: 80px; background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); border-radius: 8px 8px 0 0; transition: height 0.5s ease; position: relative; }
+        .bar.before { background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%); }
+        .bar.after { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
+        .bar:hover { opacity: 0.9; }
+        .bar-label { margin-top: 10px; font-size: 0.8rem; color: #555; text-align: center; }
+        .bar-value { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); font-size: 0.85rem; font-weight: 700; color: #7c3aed; white-space: nowrap; }
+        .bar.before .bar-value { color: #dc2626; }
+        .bar.after .bar-value { color: #059669; }
+        
+        /* Progress Bars */
+        .progress-section { background: #f5f3ff; padding: 30px; border-radius: 15px; margin-top: 25px; }
+        .progress-item { margin-bottom: 30px; }
+        .progress-item:last-child { margin-bottom: 0; }
+        .progress-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .progress-label { font-weight: 600; color: #333; }
+        .progress-value { font-weight: 700; color: #7c3aed; }
+        .progress-bar { height: 25px; background: #e5e7eb; border-radius: 12px; overflow: hidden; position: relative; }
+        .progress-fill { height: 100%; background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); border-radius: 12px; transition: width 1s ease; }
+        .progress-fill.savings { background: linear-gradient(135deg, #059669 0%, #047857 100%); }
+        
+        /* ROI Timeline */
+        .roi-timeline { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 25px; }
+        .roi-year { background: #f5f3ff; padding: 35px; border-radius: 15px; text-align: center; position: relative; overflow: hidden; }
+        .roi-year::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); }
+        .roi-year h3 { color: #7c3aed; font-size: 1.3rem; margin-bottom: 20px; font-weight: 700; }
+        .roi-year .big-number { font-size: 2.2rem; font-weight: 800; color: #7c3aed; margin-bottom: 10px; }
+        .roi-year .label { color: #555; font-size: 0.9rem; margin-bottom: 15px; }
+        .roi-year .sub-label { font-size: 0.8rem; color: #888; }
+        
+        /* Scenario Cards */
+        .scenario-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-top: 25px; }
+        .scenario-card { background: #f5f3ff; padding: 30px; border-radius: 15px; border-left: 5px solid #7c3aed; position: relative; }
+        .scenario-card.conservative { border-left-color: #f59e0b; }
+        .scenario-card.moderate { border-left-color: #3b82f6; }
+        .scenario-card.actual { border-left-color: #059669; }
+        .scenario-card h3 { color: #7c3aed; font-size: 1.2rem; margin-bottom: 20px; font-weight: 700; }
+        .scenario-card.conservative h3 { color: #f59e0b; }
+        .scenario-card.moderate h3 { color: #3b82f6; }
+        .scenario-card.actual h3 { color: #059669; }
+        .scenario-card .metric { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+        .scenario-card .metric:last-child { border-bottom: none; }
+        .scenario-card .metric .label { color: #555; }
+        .scenario-card .metric .value { font-weight: 700; color: #7c3aed; }
+        .scenario-card.conservative .metric .value { color: #f59e0b; }
+        .scenario-card.moderate .metric .value { color: #3b82f6; }
+        .scenario-card.actual .metric .value { color: #059669; }
+        
+        /* Break-Even */
+        .break-even { background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white; padding: 50px; border-radius: 15px; text-align: center; margin-top: 25px; position: relative; overflow: hidden; }
+        .break-even::before { content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%); animation: pulse 3s infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .break-even h3 { font-size: 1.8rem; margin-bottom: 20px; position: relative; z-index: 1; }
+        .break-even .time { font-size: 4rem; font-weight: 800; position: relative; z-index: 1; }
+        .break-even .details { margin-top: 20px; opacity: 0.9; position: relative; z-index: 1; }
+        
+        /* Savings Breakdown */
+        .savings-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 25px; margin-top: 25px; }
+        .savings-card { background: #f5f3ff; padding: 30px; border-radius: 15px; text-align: center; }
+        .savings-card h4 { color: #7c3aed; font-size: 1.1rem; margin-bottom: 15px; }
+        .savings-card .amount { font-size: 2rem; font-weight: 800; color: #7c3aed; margin-bottom: 5px; }
+        .savings-card .description { color: #555; font-size: 0.9rem; }
+        .savings-card .percentage { display: inline-block; background: #059669; color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-top: 10px; }
+        
+        /* Investment Breakdown */
+        .investment-table { width: 100%; border-collapse: collapse; margin-top: 25px; border-radius: 15px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .investment-table th { background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%); color: white; padding: 18px; text-align: left; font-weight: 600; }
+        .investment-table td { padding: 16px 18px; border-bottom: 1px solid #e5e7eb; }
+        .investment-table tr:nth-child(even) { background: #f5f3ff; }
+        .investment-table tr:hover { background: #ede9fe; }
+        .investment-table .total { font-weight: 700; color: #7c3aed; background: #ede9fe; }
+        
+        .footer { background: #1a1a2e; color: #c4b5fd; text-align: center; padding: 30px; font-size: 0.9rem; }
+        @media (max-width: 768px) { .header h1 { font-size: 1.8rem; } .content { padding: 30px 20px; } .roi-timeline { grid-template-columns: 1fr; } .scenario-grid { grid-template-columns: 1fr; } .savings-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="roi-card">
+            <div class="header">
+                <h1>AI Cost Optimization ROI Calculator</h1>
+                <p class="subtitle">Multi-Model LLM Approach for Enterprise Compliance</p>
+            </div>
+            <div class="content">
+                <div class="section">
+                    <h2 class="section-title">Monthly Cost Comparison</h2>
+                    <div class="bar-chart">
+                        <div class="bar-group">
+                            <div class="bar before" style="height: 240px">
+                                <div class="bar-value">$60.6M</div>
+                            </div>
+                            <div class="bar-label">Before<br>(Single-Model)</div>
+                        </div>
+                        <div class="bar-group">
+                            <div class="bar after" style="height: 94px">
+                                <div class="bar-value">$23.5M</div>
+                            </div>
+                            <div class="bar-label">After<br>(Multi-Model)</div>
+                        </div>
+                        <div class="bar-group">
+                            <div class="bar savings" style="height: 148px">
+                                <div class="bar-value">$37.1M</div>
+                            </div>
+                            <div class="bar-label">Monthly<br>Savings</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2 class="section-title">Savings Breakdown</h2>
+                    <div class="savings-grid">
+                        <div class="savings-card">
+                            <h4>Inference Cost Savings</h4>
+                            <div class="amount">$520,200</div>
+                            <div class="description">Monthly reduction in LLM costs</div>
+                            <span class="percentage">87% reduction</span>
+                        </div>
+                        <div class="savings-card">
+                            <h4>Manual Review Savings</h4>
+                            <div class="amount">$36.6M</div>
+                            <div class="description">Monthly reduction in review costs</div>
+                            <span class="percentage">61% reduction</span>
+                        </div>
+                        <div class="savings-card">
+                            <h4>Annual Savings</h4>
+                            <div class="amount">$445M</div>
+                            <div class="description">Total annual cost reduction</div>
+                            <span class="percentage">41% total savings</span>
+                        </div>
+                        <div class="savings-card">
+                            <h4>3-Year Net Benefit</h4>
+                            <div class="amount">$1.33B</div>
+                            <div class="description">Cumulative value created</div>
+                            <span class="percentage">38,566% ROI</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2 class="section-title">Key Metrics Improvement</h2>
+                    <div class="progress-section">
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Cost Reduction</span>
+                                <span class="progress-value">41%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill savings" style="width: 41%"></div>
+                            </div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">False Positive Reduction</span>
+                                <span class="progress-value">61%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill savings" style="width: 61%"></div>
+                            </div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Manual Review Reduction</span>
+                                <span class="progress-value">90%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill savings" style="width: 90%"></div>
+                            </div>
+                        </div>
+                        <div class="progress-item">
+                            <div class="progress-header">
+                                <span class="progress-label">Accuracy Improvement</span>
+                                <span class="progress-value">99.5%</span>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 99.5%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2 class="section-title">Break-Even Analysis</h2>
+                    <div class="break-even">
+                        <h3>Time to Break-Even</h3>
+                        <div class="time">2.8 Days</div>
+                        <div class="details">
+                            <p>Total Investment: $3,457,600 | Monthly Savings: $37,120,200</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2 class="section-title">3-Year ROI Summary</h2>
+                    <div class="roi-timeline">
+                        <div class="roi-year">
+                            <h3>Year 1</h3>
+                            <div class="big-number">14,733%</div>
+                            <div class="label">ROI</div>
+                            <div class="sub-label">Net Benefit: $441,984,800</div>
+                        </div>
+                        <div class="roi-year">
+                            <h3>Year 2</h3>
+                            <div class="big-number">29,566%</div>
+                            <div class="label">Cumulative ROI</div>
+                            <div class="sub-label">Net Benefit: $885,469,600</div>
+                        </div>
+                        <div class="roi-year">
+                            <h3>Year 3</h3>
+                            <div class="big-number">38,566%</div>
+                            <div class="label">Cumulative ROI</div>
+                            <div class="sub-label">Net Benefit: $1,333,427,200</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2 class="section-title">Scenario Analysis</h2>
+                    <div class="scenario-grid">
+                        <div class="scenario-card conservative">
+                            <h3><i class="fas fa-chart-line"></i> Conservative</h3>
+                            <div class="metric">
+                                <span class="label">False Positive Reduction</span>
+                                <span class="value">30%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">Monthly Savings</span>
+                                <span class="value">$25M</span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">Annual Savings</span>
+                                <span class="value">$300M</span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">3-Year Net Benefit</span>
+                                <span class="value">$893M</span>
+                            </div>
+                        </div>
+                        <div class="scenario-card moderate">
+                            <h3><i class="fas fa-chart-bar"></i> Moderate</h3>
+                            <div class="metric">
+                                <span class="label">False Positive Reduction</span>
+                                <span class="value">50%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">Monthly Savings</span>
+                                <span class="value">$32M</span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">Annual Savings</span>
+                                <span class="value">$384M</span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">3-Year Net Benefit</span>
+                                <span class="value">$1.15B</span>
+                            </div>
+                        </div>
+                        <div class="scenario-card actual">
+                            <h3><i class="fas fa-trophy"></i> Actual</h3>
+                            <div class="metric">
+                                <span class="label">False Positive Reduction</span>
+                                <span class="value">61%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">Monthly Savings</span>
+                                <span class="value">$37M</span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">Annual Savings</span>
+                                <span class="value">$445M</span>
+                            </div>
+                            <div class="metric">
+                                <span class="label">3-Year Net Benefit</span>
+                                <span class="value">$1.33B</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2 class="section-title">Investment Breakdown</h2>
+                    <table class="investment-table">
+                        <thead>
+                            <tr>
+                                <th>Category</th>
+                                <th>Item</th>
+                                <th>Cost</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td rowspan="5"><strong>One-Time</strong></td>
+                                <td>Architecture Design</td>
+                                <td>$200,000</td>
+                            </tr>
+                            <tr>
+                                <td>SDK Development</td>
+                                <td>$500,000</td>
+                            </tr>
+                            <tr>
+                                <td>Model Fine-Tuning</td>
+                                <td>$300,000</td>
+                            </tr>
+                            <tr>
+                                <td>Integration & Testing</td>
+                                <td>$400,000</td>
+                            </tr>
+                            <tr>
+                                <td>Training & Documentation</td>
+                                <td>$100,000</td>
+                            </tr>
+                            <tr class="total">
+                                <td colspan="2"><strong>Total One-Time Investment</strong></td>
+                                <td><strong>$1,500,000</strong></td>
+                            </tr>
+                            <tr>
+                                <td rowspan="4"><strong>Annual</strong></td>
+                                <td>Cloud Infrastructure</td>
+                                <td>$500,000</td>
+                            </tr>
+                            <tr>
+                                <td>Model APIs</td>
+                                <td>$957,600</td>
+                            </tr>
+                            <tr>
+                                <td>Monitoring & Support</td>
+                                <td>$300,000</td>
+                            </tr>
+                            <tr>
+                                <td>Continuous Fine-Tuning</td>
+                                <td>$200,000</td>
+                            </tr>
+                            <tr class="total">
+                                <td colspan="2"><strong>Total Annual Operating</strong></td>
+                                <td><strong>$1,957,600</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="footer">
+                <p>&copy; 2026 Ashutosh Gupta | AI Cost Optimization ROI Calculator</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
